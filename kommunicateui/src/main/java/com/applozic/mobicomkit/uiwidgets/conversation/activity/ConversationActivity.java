@@ -1,5 +1,6 @@
 package com.applozic.mobicomkit.uiwidgets.conversation.activity;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -20,11 +21,16 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.Settings;
 
 import com.applozic.mobicomkit.Applozic;
+import com.applozic.mobicomkit.api.account.user.UserLogoutTask;
 import com.applozic.mobicomkit.uiwidgets.conversation.richmessaging.webview.AlWebViewActivity;
+import com.applozic.mobicomkit.uiwidgets.conversation.stt.SpeechService;
+import com.applozic.mobicomkit.uiwidgets.conversation.stt.VoiceRecorder;
+import com.applozic.mobicomkit.uiwidgets.conversation.stt.VoiceView;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.core.app.ActivityCompat;
@@ -85,7 +91,9 @@ import com.applozic.mobicomkit.uiwidgets.instruction.InstructionUtil;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.KmAttachmentsController;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.callbacks.PrePostUIMethods;
 
+import io.kommunicate.Kommunicate;
 import io.kommunicate.async.KmAutoSuggestionsAsyncTask;
+import io.kommunicate.callbacks.KMLogoutHandler;
 import io.kommunicate.utils.KmConstants;
 import io.kommunicate.utils.KmUtils;
 
@@ -106,12 +114,12 @@ import com.applozic.mobicommons.people.SearchListFragment;
 import com.applozic.mobicommons.people.channel.Channel;
 import com.applozic.mobicommons.people.channel.Conversation;
 import com.applozic.mobicommons.people.contact.Contact;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
+//import com.google.android.gms.common.ConnectionResult;
+//import com.google.android.gms.common.GooglePlayServicesUtil;
+//import com.google.android.gms.common.api.GoogleApiClient;
+//import com.google.android.gms.location.LocationListener;
+//import com.google.android.gms.location.LocationRequest;
+//import com.google.android.gms.location.LocationServices;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -126,12 +134,15 @@ import java.util.List;
 import java.util.Set;
 
 import static com.applozic.mobicomkit.uiwidgets.conversation.fragment.MultimediaOptionFragment.REQUEST_CODE_MULTI_SELECT_GALLERY;
+import static io.kommunicate.Kommunicate.login;
+import static io.kommunicate.Kommunicate.logout;
 
 
 /**
  * Created by devashish on 6/25/2015.
  */
-public class ConversationActivity extends AppCompatActivity implements MessageCommunicator, MobiComKitActivityInterface, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ActivityCompat.OnRequestPermissionsResultCallback, MobicomkitUriListener, SearchView.OnQueryTextListener, OnClickReplyInterface, KmStoragePermissionListener, CustomToolbarListener {
+//implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener
+public class ConversationActivity extends AppCompatActivity implements VoiceView.OnRecordListener, MessageCommunicator, MobiComKitActivityInterface, ActivityCompat.OnRequestPermissionsResultCallback, MobicomkitUriListener, SearchView.OnQueryTextListener, OnClickReplyInterface, KmStoragePermissionListener, CustomToolbarListener {
 
     public static final int LOCATION_SERVICE_ENABLE = 1001;
     public static final String TAKE_ORDER = "takeOrder";
@@ -161,7 +172,7 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
     protected MobiComQuickConversationFragment quickConversationFragment;
     protected MobiComKitBroadcastReceiver mobiComKitBroadcastReceiver;
     protected ActionBar mActionBar;
-    protected GoogleApiClient googleApiClient;
+    //protected GoogleApiClient googleApiClient;
     String geoApiKey;
     String activityToOpenOnClickOfCallButton;
     int resourceId;
@@ -174,7 +185,7 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
     File profilePhotoFile;
     SyncAccountStatusAsyncTask accountStatusAsyncTask;
     String contactsGroupId;
-    private LocationRequest locationRequest;
+    //private LocationRequest locationRequest;
     private Channel channel;
     private BaseContactService baseContactService;
     private ApplozicPermissions applozicPermission;
@@ -269,6 +280,8 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
         super.onStop();
         Applozic.disconnectPublish(this);
     }
+
+
 
     @Override
     protected void onResume() {
@@ -422,15 +435,15 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
 
         mActionBar.setTitle(R.string.conversations);
 
-        mActionBar.setDisplayHomeAsUpEnabled(true);
+        //mActionBar.setDisplayHomeAsUpEnabled(true);
         mActionBar.setHomeButtonEnabled(true);
 
         kmAttachmentsController = new KmAttachmentsController(this);
 
-        googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API).build();
+//        googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .addApi(LocationServices.API).build();
         onNewIntent(getIntent());
 
         Boolean takeOrder = getIntent().getBooleanExtra(TAKE_ORDER, false);
@@ -481,6 +494,7 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
                 conversationUIService.sendAttachments(new ArrayList<>(Arrays.asList(Uri.parse(file.getAbsolutePath()))), "");
             }
         };
+
     }
 
     @Override
@@ -574,7 +588,7 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
             if (requestCode == LOCATION_SERVICE_ENABLE) {
                 if (((LocationManager) getSystemService(Context.LOCATION_SERVICE))
                         .isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    googleApiClient.connect();
+                    //googleApiClient.connect();
                 } else {
                     Toast.makeText(ConversationActivity.this, R.string.unable_to_fetch_location, Toast.LENGTH_LONG).show();
                 }
@@ -807,8 +821,8 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
                 AlertDialog alert = builder.create();
                 alert.show();
             } else {
-                googleApiClient.disconnect();
-                googleApiClient.connect();
+                //googleApiClient.disconnect();
+                //googleApiClient.connect();
             }
 
             //=================  END ===============
@@ -921,6 +935,7 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
 
     @Override
     public void onBackPressed() {
+
         if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
             try {
                 Intent upIntent = ApplozicSetting.getInstance(this).getParentActivityIntent(this);
@@ -951,6 +966,7 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
         } else {
             super.onBackPressed();
         }
+
     }
 
     @Override
@@ -964,61 +980,61 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
         conversationUIService.removeConversation(message, formattedContactNumber);
     }
 
-    @Override
-    public void onConnected(Bundle bundle) {
-        try {
-            Location currentLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-            if (currentLocation == null) {
-                Toast.makeText(this, R.string.waiting_for_current_location, Toast.LENGTH_SHORT).show();
-                locationRequest = new LocationRequest();
-                locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                locationRequest.setInterval(UPDATE_INTERVAL);
-                locationRequest.setFastestInterval(FASTEST_INTERVAL);
-                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
-            }
-            if (currentLocation != null && conversation != null) {
-                conversation.attachLocation(currentLocation);
-            }
-        } catch (Exception e) {
-        }
+//    @Override
+//    public void onConnected(Bundle bundle) {
+//        try {
+//            Location currentLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+//            if (currentLocation == null) {
+//                Toast.makeText(this, R.string.waiting_for_current_location, Toast.LENGTH_SHORT).show();
+//                locationRequest = new LocationRequest();
+//                locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//                locationRequest.setInterval(UPDATE_INTERVAL);
+//                locationRequest.setFastestInterval(FASTEST_INTERVAL);
+//                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+//            }
+//            if (currentLocation != null && conversation != null) {
+//                conversation.attachLocation(currentLocation);
+//            }
+//        } catch (Exception e) {
+//        }
+//
+//    }
 
-    }
+//    @Override
+//    public void onConnectionSuspended(int i) {
+//        Log.w(((Object) this).getClass().getSimpleName(),
+//                "onConnectionSuspended() called.");
+//
+//    }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.w(((Object) this).getClass().getSimpleName(),
-                "onConnectionSuspended() called.");
+//    @Override
+//    public void onLocationChanged(Location location) {
+//        try {
+//            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+//            if (conversation != null && location != null) {
+//                conversation.attachLocation(location);
+//            }
+//        } catch (Exception e) {
+//        }
+//    }
 
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        try {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-            if (conversation != null && location != null) {
-                conversation.attachLocation(location);
-            }
-        } catch (Exception e) {
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (connectionResult.hasResolution()) {
-            try {
-                // Start an Activity that tries to resolve the error
-                connectionResult.startResolutionForResult(
-                        this,
-                        CONNECTION_FAILURE_RESOLUTION_REQUEST);
-            } catch (IntentSender.SendIntentException e) {
-                // Log the error
-                e.printStackTrace();
-            }
-        } else {
-            showErrorDialog(connectionResult.getErrorCode());
-        }
-
-    }
+//    @Override
+//    public void onConnectionFailed(ConnectionResult connectionResult) {
+//        if (connectionResult.hasResolution()) {
+//            try {
+//                // Start an Activity that tries to resolve the error
+//                connectionResult.startResolutionForResult(
+//                        this,
+//                        CONNECTION_FAILURE_RESOLUTION_REQUEST);
+//            } catch (IntentSender.SendIntentException e) {
+//                // Log the error
+//                e.printStackTrace();
+//            }
+//        } else {
+//            showErrorDialog(connectionResult.getErrorCode());
+//        }
+//
+//    }
 
     public void setChildFragmentLayoutBG() {
 
@@ -1030,10 +1046,10 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
         childFragmentLayout.setBackgroundResource(android.R.color.transparent);
     }
 
-    void showErrorDialog(int code) {
-        GooglePlayServicesUtil.getErrorDialog(code, this,
-                CONNECTION_FAILURE_RESOLUTION_REQUEST).show();
-    }
+//    void showErrorDialog(int code) {
+//        GooglePlayServicesUtil.getErrorDialog(code, this,
+//                CONNECTION_FAILURE_RESOLUTION_REQUEST).show();
+//    }
 
     public Contact getContact() {
         return contact;
@@ -1416,6 +1432,16 @@ public class ConversationActivity extends AppCompatActivity implements MessageCo
 
     @Override
     public void hideSubtitleAndProfilePic() {
+
+    }
+
+    @Override
+    public void onRecordStart() {
+
+    }
+
+    @Override
+    public void onRecordFinish() {
 
     }
 

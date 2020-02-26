@@ -4,16 +4,18 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "io.kommunicate.app"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "APP_ID", '"<Your-APP-ID>"'
+        buildConfigField "String", "APP_ID", '"840b396383f0fddbb80ca4d53ba79cc1"'
     }
     buildTypes {
         release {
+
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -32,7 +34,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     api project(':kommunicateui')
     //implementation 'io.kommunicate.sdk:kommunicateui:1.9.6'
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.multidex:multidex:2.0.1'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'

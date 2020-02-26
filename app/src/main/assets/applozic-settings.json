@@ -1,7 +1,7 @@
 {
   "customMessageBackgroundColor": "#e6e5ec",
-  "sentMessageBackgroundColor": "#5c5aa7",
-  "receivedMessageBackgroundColor": "#e6e5ec",
+  "sentMessageBackgroundColor": "#81C784",
+  "receivedMessageBackgroundColor": "#ffebee",
   "sendButtonBackgroundColor": "#5c5aa7",
   "sentMessageCreatedAtTimeColor": "#ede6e6",
   "receivedMessageCreatedAtTimeColor": "#8a8686",
@@ -9,8 +9,8 @@
   "channelCustomMessageBgColor": "#cccccc",
   "sentContactMessageTextColor:": "#5fba7d",
   "receivedContactMessageTextColor": "#646262",
-  "sentMessageTextColor": "#FFFFFFFF",
-  "receivedMessageTextColor": "#646262",
+  "sentMessageTextColor": "#212121",
+  "receivedMessageTextColor": "#212121",
   "messageEditTextTextColor": "#000000",
   "sentMessageLinkTextColor": "#FFFFFFFF",
   "receivedMessageLinkTextColor": "#5fba7d",
@@ -23,7 +23,7 @@
   "sentMessageBorderColor": "#5c5aa7",
   "receivedMessageBorderColor": "#e6e5ec",
   "channelCustomMessageBorderColor": "#cccccc",
-  "collapsingToolbarLayoutColor": "#5c5aa7",
+  "collapsingToolbarLayoutColor": "#da291c",
   "groupParticipantsTextColor": "#5c5aa7",
   "groupDeleteButtonBackgroundColor": "#5c5aa7",
   "groupExitButtonBackgroundColor": "#5c5aa7",
@@ -80,7 +80,7 @@
   "hideGroupSubtitle": false,
   "enableFaqOption": [
     true,
-    false
+    true
   ],
   "sentMessageCornerRadii": [
     10,
@@ -95,12 +95,12 @@
     10
   ],
   "fontModel": {
-    "messageTextFont": "",
-    "messageDisplayNameFont": "",
-    "createdAtTimeFont": "",
-    "toolbarTitleFont": "",
-    "toolbarSubtitleFont": "",
-    "messageEditTextFont": ""
+    "messageTextFont": "font/roboto_regular.ttf",
+    "messageDisplayNameFont": "font/roboto_black.ttf",
+    "createdAtTimeFont": "font/roboto_light.ttf",
+    "toolbarTitleFont": "font/roboto_bold.ttf",
+    "toolbarSubtitleFont": "font/roboto_lightitalic.ttf",
+    "messageEditTextFont": "font/roboto_regular.ttf"
   },
   "filterGallery": {
     "ALL_FILES": true,
@@ -110,9 +110,9 @@
     "VIDEO_ONLY": false
   },
   "attachmentOptions": {
-    ":location": true,
-    ":camera": true,
-    ":file": true,
+    ":location": false,
+    ":camera": false,
+    ":file": false,
     ":audio": true
   },
   "editTextHintText:": "Type your message...",

@@ -35,36 +35,36 @@ import com.applozic.mobicommons.commons.core.utils.PermissionsUtils;
 import com.applozic.mobicommons.commons.core.utils.Utils;
 import com.applozic.mobicommons.file.FileUtils;
 import com.applozic.mobicommons.json.GsonUtils;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+//import com.google.android.gms.common.ConnectionResult;
+//import com.google.android.gms.common.api.GoogleApiClient;
+//import com.google.android.gms.location.LocationListener;
+//import com.google.android.gms.location.LocationRequest;
+//import com.google.android.gms.location.LocationServices;
+//import com.google.android.gms.maps.CameraUpdateFactory;
+//import com.google.android.gms.maps.GoogleMap;
+//import com.google.android.gms.maps.OnMapReadyCallback;
+//import com.google.android.gms.maps.SupportMapFragment;
+//import com.google.android.gms.maps.model.LatLng;
+//import com.google.android.gms.maps.model.Marker;
+//import com.google.android.gms.maps.model.MarkerOptions;
 
+// OnMapReadyCallback, LocationListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks
+public class MobicomLocationActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
-public class MobicomLocationActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, ActivityCompat.OnRequestPermissionsResultCallback {
-
-    SupportMapFragment mapFragment;
-    LatLng position;
+   //SupportMapFragment mapFragment;
+   // LatLng position;
     RelativeLayout sendLocation;
     private LinearLayout layout;
     public Snackbar snackbar;
     Location mCurrentLocation;
-    protected GoogleApiClient googleApiClient;
-    private LocationRequest locationRequest;
+   // protected GoogleApiClient googleApiClient;
+   // private LocationRequest locationRequest;
     public static final int LOCATION_SERVICE_ENABLE = 1001;
     protected static final long UPDATE_INTERVAL = 5;
     protected static final long FASTEST_INTERVAL = 1;
     private ConnectivityReceiver connectivityReceiver;
     AlCustomizationSettings alCustomizationSettings;
-    Marker myLocationMarker;
+   // Marker myLocationMarker;
     ApplozicPermissions applozicPermissions;
     static final String TAG = "MobicomLocationActivity";
 
@@ -91,12 +91,12 @@ public class MobicomLocationActivity extends AppCompatActivity implements OnMapR
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         layout = (LinearLayout) findViewById(R.id.footerAd);
         sendLocation = (RelativeLayout) findViewById(R.id.sendLocation);
-        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        //mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         applozicPermissions = new ApplozicPermissions(MobicomLocationActivity.this, layout);
-        googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API).build();
+//        googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .addApi(LocationServices.API).build();
         processLocation();
         onNewIntent(getIntent());
         connectivityReceiver = new ConnectivityReceiver();
@@ -104,64 +104,64 @@ public class MobicomLocationActivity extends AppCompatActivity implements OnMapR
     }
 
 
-    @Override
-    public void onMapReady(final GoogleMap googleMap) {
-        try {
-            if (mCurrentLocation != null) {
-                position = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-                googleMap.clear();
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.draggable(true);
-                if (myLocationMarker == null) {
-                    myLocationMarker = googleMap.addMarker(markerOptions.position(position).title(""));
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 20));
-                    googleMap.animateCamera(CameraUpdateFactory.zoomTo(17), 2000, null);
-                } else {
-                    googleMap.addMarker(markerOptions.position(myLocationMarker.getPosition()).title(""));
-                }
-                googleMap.setMyLocationEnabled(true);
-                googleMap.getUiSettings().setZoomGesturesEnabled(true);
-                googleMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
-                    @Override
-                    public void onMarkerDragStart(Marker marker) {
-
-                    }
-
-                    @Override
-                    public void onMarkerDrag(Marker marker) {
-
-                    }
-
-                    @Override
-                    public void onMarkerDragEnd(Marker marker) {
-                        if (myLocationMarker != null) {
-                            myLocationMarker.remove();
-                        }
-                        MarkerOptions newMarkerOptions = new MarkerOptions();
-                        newMarkerOptions.draggable(true);
-                        myLocationMarker = googleMap.addMarker(newMarkerOptions.position(marker.getPosition()).title(""));
-                    }
-                });
-            }
-
-            sendLocation.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Utils.printLog(MobicomLocationActivity.this,TAG, "On click of send location button");
-                    if (myLocationMarker != null) {
-                        Intent intent = new Intent();
-                        intent.putExtra("latitude", myLocationMarker.getPosition().latitude);
-                        intent.putExtra("longitude", myLocationMarker.getPosition().longitude);
-                        setResult(RESULT_OK, intent);
-                        finish();
-                    }
-                }
-            });
-        } catch (Exception e) {
-            Utils.printLog(MobicomLocationActivity.this,TAG, "Check if location permission are added");
-        }
-
-    }
+ //   @Override
+//    public void onMapReady(final GoogleMap googleMap) {
+//        try {
+//            if (mCurrentLocation != null) {
+//                position = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+//                googleMap.clear();
+//                MarkerOptions markerOptions = new MarkerOptions();
+//                markerOptions.draggable(true);
+//                if (myLocationMarker == null) {
+//                    myLocationMarker = googleMap.addMarker(markerOptions.position(position).title(""));
+//                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 20));
+//                    googleMap.animateCamera(CameraUpdateFactory.zoomTo(17), 2000, null);
+//                } else {
+//                    googleMap.addMarker(markerOptions.position(myLocationMarker.getPosition()).title(""));
+//                }
+//                googleMap.setMyLocationEnabled(true);
+//                googleMap.getUiSettings().setZoomGesturesEnabled(true);
+//                googleMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+//                    @Override
+//                    public void onMarkerDragStart(Marker marker) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onMarkerDrag(Marker marker) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onMarkerDragEnd(Marker marker) {
+//                        if (myLocationMarker != null) {
+//                            myLocationMarker.remove();
+//                        }
+//                        MarkerOptions newMarkerOptions = new MarkerOptions();
+//                        newMarkerOptions.draggable(true);
+//                        myLocationMarker = googleMap.addMarker(newMarkerOptions.position(marker.getPosition()).title(""));
+//                    }
+//                });
+//            }
+//
+//            sendLocation.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    Utils.printLog(MobicomLocationActivity.this,TAG, "On click of send location button");
+//                    if (myLocationMarker != null) {
+//                        Intent intent = new Intent();
+//                        intent.putExtra("latitude", myLocationMarker.getPosition().latitude);
+//                        intent.putExtra("longitude", myLocationMarker.getPosition().longitude);
+//                        setResult(RESULT_OK, intent);
+//                        finish();
+//                    }
+//                }
+//            });
+//        } catch (Exception e) {
+//            Utils.printLog(MobicomLocationActivity.this,TAG, "Check if location permission are added");
+//        }
+//
+//    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -169,7 +169,7 @@ public class MobicomLocationActivity extends AppCompatActivity implements OnMapR
         if (requestCode == LOCATION_SERVICE_ENABLE) {
             if (((LocationManager) getSystemService(Context.LOCATION_SERVICE))
                     .isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                googleApiClient.connect();
+                //googleApiClient.connect();
             } else {
                 Toast.makeText(MobicomLocationActivity.this, R.string.unable_to_fetch_location, Toast.LENGTH_LONG).show();
             }
@@ -199,8 +199,8 @@ public class MobicomLocationActivity extends AppCompatActivity implements OnMapR
             AlertDialog alert = builder.create();
             alert.show();
         } else {
-            googleApiClient.disconnect();
-            googleApiClient.connect();
+//            googleApiClient.disconnect();
+//            googleApiClient.connect();
         }
     }
 
@@ -216,85 +216,85 @@ public class MobicomLocationActivity extends AppCompatActivity implements OnMapR
     @Override
     protected void onStart() {
         super.onStart();
-        if (googleApiClient != null) {
-            googleApiClient.connect();
-        }
+//        if (googleApiClient != null) {
+//            //googleApiClient.connect();
+//        }
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (googleApiClient != null) {
-            googleApiClient.disconnect();
-        }
+//        if (googleApiClient != null) {
+//           // googleApiClient.disconnect();
+//        }
     }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.w(TAG,
-                "onConnectionSuspended() called.");
+//    @Override
+//    public void onConnectionSuspended(int i) {
+//        Log.w(TAG,
+//                "onConnectionSuspended() called.");
+//
+//    }
 
-    }
+//    @Override
+//    public void onConnected(Bundle bundle) {
+//        try {
+//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                // TODO: Consider calling
+//                //    ActivityCompat#requestPermissions
+//                // here to request the missing permissions, and then overriding
+//                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//                //                                          int[] grantResults)
+//                // to handle the case where the user grants the permission. See the documentation
+//                // for ActivityCompat#requestPermissions for more details.
+//                return;
+//            }
+//            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+//            if (mCurrentLocation == null) {
+//                Toast.makeText(this, R.string.waiting_for_current_location, Toast.LENGTH_SHORT).show();
+//                locationRequest = new LocationRequest();
+//                locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+//                locationRequest.setInterval(UPDATE_INTERVAL);
+//                locationRequest.setFastestInterval(FASTEST_INTERVAL);
+//                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+//            }
+//
+//            if (mCurrentLocation != null) {
+//                mapFragment.getMapAsync(this);
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
 
-    @Override
-    public void onConnected(Bundle bundle) {
-        try {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-            if (mCurrentLocation == null) {
-                Toast.makeText(this, R.string.waiting_for_current_location, Toast.LENGTH_SHORT).show();
-                locationRequest = new LocationRequest();
-                locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-                locationRequest.setInterval(UPDATE_INTERVAL);
-                locationRequest.setFastestInterval(FASTEST_INTERVAL);
-                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
-            }
+//    @Override
+//    public void onLocationChanged(Location location) {
+//        try {
+//            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+//            if (location != null) {
+//                mCurrentLocation = location;
+//            }
+//        } catch (Exception e) {
+//        }
+//    }
+//
+//    public void showSnackBar(int resId) {
+//        try {
+//            snackbar = Snackbar.make(layout, resId,
+//                    Snackbar.LENGTH_SHORT);
+//            snackbar.show();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-            if (mCurrentLocation != null) {
-                mapFragment.getMapAsync(this);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        try {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-            if (location != null) {
-                mCurrentLocation = location;
-            }
-        } catch (Exception e) {
-        }
-    }
-
-    public void showSnackBar(int resId) {
-        try {
-            snackbar = Snackbar.make(layout, resId,
-                    Snackbar.LENGTH_SHORT);
-            snackbar.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
-    }
+//    @Override
+//    public void onConnectionFailed(ConnectionResult connectionResult) {
+//
+//    }
 
     @Override
     protected void onDestroy() {
@@ -307,19 +307,19 @@ public class MobicomLocationActivity extends AppCompatActivity implements OnMapR
             e.printStackTrace();
         }
     }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PermissionsUtils.REQUEST_LOCATION) {
-            if (PermissionsUtils.verifyPermissions(grantResults)) {
-                showSnackBar(R.string.location_permission_granted);
-                processingLocation();
-            } else {
-                showSnackBar(R.string.location_permission_not_granted);
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        }
-    }
+//
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+//        if (requestCode == PermissionsUtils.REQUEST_LOCATION) {
+//            if (PermissionsUtils.verifyPermissions(grantResults)) {
+//                showSnackBar(R.string.location_permission_granted);
+//                processingLocation();
+//            } else {
+//                showSnackBar(R.string.location_permission_not_granted);
+//            }
+//        } else {
+//            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        }
+//    }
 
 }

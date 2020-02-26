@@ -40,7 +40,8 @@ import io.kommunicate.callbacks.KMLoginHandler;
 public class MainActivity extends AppCompatActivity {
 
     EditText mUserId, mPassword;
-    AppCompatButton loginButton, visitorButton;
+    //AppCompatButton loginButton;
+            AppCompatButton visitorButton;
     LinearLayout layout;
     boolean exit = false;
     public static final String APP_ID = BuildConfig.APP_ID;
@@ -54,39 +55,39 @@ public class MainActivity extends AppCompatActivity {
         Kommunicate.init(this, APP_ID);
 
         layout = (LinearLayout) findViewById(R.id.footerSnack);
-        mUserId = (EditText) findViewById(R.id.userId_editText);
-        mPassword = (EditText) findViewById(R.id.password_editText);
-        loginButton = (AppCompatButton) findViewById(R.id.btn_signup);
+//        mUserId = (EditText) findViewById(R.id.userId_editText);
+//        mPassword = (EditText) findViewById(R.id.password_editText);
+//        loginButton = (AppCompatButton) findViewById(R.id.btn_signup);
         visitorButton = findViewById(R.id.btn_login_as_visitor);
 
-        TextView txtViewPrivacyPolicy = (TextView) findViewById(R.id.txtPrivacyPolicy);
-        txtViewPrivacyPolicy.setMovementMethod(LinkMovementMethod.getInstance());
+        //TextView txtViewPrivacyPolicy = (TextView) findViewById(R.id.txtPrivacyPolicy);
+        //txtViewPrivacyPolicy.setMovementMethod(LinkMovementMethod.getInstance());
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    if (isPlaceHolderAppId()) {
-                        return;
-                    }
-                    final String mUserIdText = mUserId.getText().toString().trim();
-                    String mPasswordText = mPassword.getText().toString().trim();
-                    if (TextUtils.isEmpty(mUserIdText) || mUserId.getText().toString().trim().length() == 0) {
-                        Toast.makeText(getBaseContext(), R.string.enter_user_id, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
-                    progressDialog.setTitle("Logging in..");
-                    progressDialog.setMessage("Please wait...");
-                    progressDialog.setCancelable(false);
-                    progressDialog.show();
-                    initLoginData(mUserId.getText().toString().trim(), mPassword.getText().toString().trim(), progressDialog);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+//        loginButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                try {
+//                    if (isPlaceHolderAppId()) {
+//                        return;
+//                    }
+//                    final String mUserIdText = mUserId.getText().toString().trim();
+//                    String mPasswordText = mPassword.getText().toString().trim();
+//                    if (TextUtils.isEmpty(mUserIdText) || mUserId.getText().toString().trim().length() == 0) {
+//                        Toast.makeText(getBaseContext(), R.string.enter_user_id, Toast.LENGTH_SHORT).show();
+//                        return;
+//                    }
+//
+//                    final ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+//                    progressDialog.setTitle("Logging in..");
+//                    progressDialog.setMessage("Please wait...");
+//                    progressDialog.setCancelable(false);
+//                    progressDialog.show();
+//                    initLoginData(mUserId.getText().toString().trim(), mPassword.getText().toString().trim(), progressDialog);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
 
         visitorButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
                 progressDialog.setMessage("Please wait...");
                 progressDialog.setCancelable(false);
                 progressDialog.show();
+
+
                 Kommunicate.loginAsVisitor(MainActivity.this, new KMLoginHandler() {
                     @Override
                     public void onSuccess(RegistrationResponse registrationResponse, Context context) {

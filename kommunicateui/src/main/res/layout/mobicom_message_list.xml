@@ -510,28 +510,60 @@
                     android:layout_height="80dp"
                     android:visibility="gone">
 
-                    <com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmRecordView
-                        android:id="@+id/km_record_view"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="start"
-                        android:layout_marginStart="23dp"
-                        android:layout_marginLeft="23dp" />
+<!--                    <com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmRecordView-->
+<!--                        android:id="@+id/km_record_view"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_gravity="start"-->
+<!--                        android:layout_marginStart="23dp"-->
+<!--                        android:layout_marginLeft="23dp" />-->
 
-                    <com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmRecordButton
+<!--                    <com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmRecordButton-->
+<!--                        android:id="@+id/audio_record_button"-->
+<!--                        android:layout_width="35dp"-->
+<!--                        android:layout_height="35dp"-->
+<!--                        android:layout_gravity="end"-->
+<!--                        android:layout_marginStart="5dp"-->
+<!--                        android:layout_marginLeft="5dp"-->
+<!--                        android:layout_marginTop="10dp"-->
+<!--                        android:layout_marginEnd="23dp"-->
+<!--                        android:layout_marginRight="21dp"-->
+<!--                        android:background="@drawable/km_audio_button_background"-->
+<!--                        android:clickable="true"-->
+<!--                        android:scaleType="fitCenter"-->
+<!--                        android:src="@drawable/noun_mic_1057615"-->
+<!--                        android:visibility="visible" />-->
+
+<!--                    <ImageButton-->
+<!--                        android:id="@+id/audio_record_button"-->
+<!--                        android:layout_width="35dp"-->
+<!--                        android:layout_height="35dp"-->
+<!--                        android:layout_gravity="end"-->
+<!--                        android:layout_marginStart="5dp"-->
+<!--                        android:layout_marginLeft="5dp"-->
+<!--                        android:layout_marginTop="10dp"-->
+<!--                        android:layout_marginEnd="23dp"-->
+<!--                        android:layout_marginRight="21dp"-->
+<!--                        android:background="@drawable/km_audio_button_background"-->
+<!--                        android:clickable="true"-->
+<!--                        android:scaleType="fitCenter"-->
+<!--                        android:src="@drawable/noun_mic_1057615"-->
+<!--                        android:visibility="visible" />
+                        android:layout_marginRight="21dp"
+                        android:clickable="true"
+                        android:layout_marginLeft="5dp"
+                        android:background="@drawable/km_audio_button_background"
+-->
+                    <com.applozic.mobicomkit.uiwidgets.conversation.stt.VoiceView
                         android:id="@+id/audio_record_button"
-                        android:layout_width="35dp"
-                        android:layout_height="35dp"
+                        android:layout_width="65dp"
+                        android:layout_height="65dp"
                         android:layout_gravity="end"
                         android:layout_marginStart="5dp"
-                        android:layout_marginLeft="5dp"
                         android:layout_marginTop="10dp"
-                        android:layout_marginEnd="23dp"
-                        android:layout_marginRight="21dp"
+                        android:layout_marginEnd="10dp"
                         android:background="@drawable/km_audio_button_background"
-                        android:clickable="true"
                         android:scaleType="fitCenter"
-                        android:src="@drawable/noun_mic_1057615"
                         android:visibility="visible" />
                 </FrameLayout>
 

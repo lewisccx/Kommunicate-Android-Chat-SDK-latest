@@ -1,10 +1,14 @@
 package com.applozic.mobicomkit.uiwidgets.conversation.fragment;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,11 +22,16 @@ import com.applozic.mobicomkit.api.conversation.SyncCallService;
 import com.applozic.mobicomkit.channel.service.ChannelService;
 import com.applozic.mobicomkit.uiwidgets.R;
 import com.applozic.mobicomkit.uiwidgets.conversation.ConversationUIService;
+import com.applozic.mobicomkit.uiwidgets.conversation.activity.ConversationActivity;
+import com.applozic.mobicomkit.uiwidgets.kommunicate.utils.KmHelper;
+import com.applozic.mobicomkit.uiwidgets.uilistener.KmActionCallback;
 import com.applozic.mobicommons.commons.core.utils.LocationUtils;
 import com.applozic.mobicommons.commons.core.utils.Utils;
 import com.applozic.mobicommons.people.SearchListFragment;
 import com.applozic.mobicommons.people.channel.Channel;
 import com.applozic.mobicommons.people.contact.Contact;
+
+import java.util.Objects;
 
 public class ConversationFragment extends MobiComConversationFragment implements SearchListFragment {
 
@@ -67,7 +76,11 @@ public class ConversationFragment extends MobiComConversationFragment implements
                 SyncCallService.refreshView = true;
             }
         }
+        //((ConversationActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
     }
+
+
 
     public void attachLocation(Location currentLocation) {
         String address = LocationUtils.getAddress(getActivity(), currentLocation);
@@ -142,6 +155,7 @@ public class ConversationFragment extends MobiComConversationFragment implements
         });
         return view;
     }
+
 
     @Override
     protected void processMobiTexterUserCheck() {

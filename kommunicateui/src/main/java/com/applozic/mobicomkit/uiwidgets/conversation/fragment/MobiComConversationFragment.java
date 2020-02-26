@@ -1,14 +1,18 @@
 package com.applozic.mobicomkit.uiwidgets.conversation.fragment;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -17,14 +21,21 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
 import android.os.Vibrator;
 import android.provider.OpenableColumns;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -43,6 +54,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -132,6 +144,9 @@ import com.applozic.mobicomkit.uiwidgets.conversation.richmessaging.RichMessageA
 import com.applozic.mobicomkit.uiwidgets.conversation.richmessaging.webview.AlWebViewActivity;
 import com.applozic.mobicomkit.uiwidgets.conversation.stt.KmSpeechToText;
 import com.applozic.mobicomkit.uiwidgets.conversation.stt.KmTextToSpeech;
+import com.applozic.mobicomkit.uiwidgets.conversation.stt.SpeechService;
+import com.applozic.mobicomkit.uiwidgets.conversation.stt.VoiceRecorder;
+import com.applozic.mobicomkit.uiwidgets.conversation.stt.VoiceView;
 import com.applozic.mobicomkit.uiwidgets.instruction.InstructionUtil;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.KmAutoSuggestionAdapter;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.KmSettings;
@@ -139,7 +154,6 @@ import com.applozic.mobicomkit.uiwidgets.kommunicate.animators.OnBasketAnimation
 
 import com.applozic.mobicomkit.uiwidgets.kommunicate.callbacks.KmToolbarClickListener;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmFeedbackView;
-import com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmRecordButton;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmRecordView;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmRecyclerView;
 import com.applozic.mobicomkit.uiwidgets.kommunicate.views.KmToast;
@@ -210,14 +224,14 @@ import static java.util.Collections.disjoint;
  * reg
  * Created by devashish on 10/2/15.
  */
-public abstract class MobiComConversationFragment extends Fragment implements View.OnClickListener, ContextMenuClickListener, ALRichMessageListener, KmOnRecordListener, OnBasketAnimationEndListener, LoaderManager.LoaderCallbacks<Cursor>, FeedbackInputFragment.FeedbackFragmentListener, ApplozicUIListener, KmSpeechToText.KmTextListener {
+public abstract class MobiComConversationFragment extends Fragment implements VoiceView.OnRecordListener, View.OnClickListener, ContextMenuClickListener, ALRichMessageListener, KmOnRecordListener, OnBasketAnimationEndListener, LoaderManager.LoaderCallbacks<Cursor>, FeedbackInputFragment.FeedbackFragmentListener, ApplozicUIListener, KmSpeechToText.KmTextListener {
 
     public FrameLayout emoticonsFrameLayout,
             contextFrameLayout;
     public GridView multimediaPopupGrid;
 
     private static final String TAG = "MobiComConversation";
-
+    private static final String RES_PREFIX = "android.resource://com.applozic.mobicomkit.uiwidgets";
     protected List<Conversation> conversations;
     protected String title = "Conversations";
     protected DownloadConversation downloadConversation;
@@ -230,7 +244,11 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
     protected Channel channel;
     protected Integer currentConversationId;
     protected EditText messageEditText;
-    protected KmRecordButton recordButton;
+
+    //protected KmRecordButton recordButton;
+    //protected ImageButton recordButton;
+    protected VoiceView recordButton;
+
     protected ImageButton sendButton;
     protected ImageButton attachButton;
     protected Spinner sendType;
@@ -296,7 +314,8 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
     private ImageCache imageCache;
     private RecyclerView messageTemplateView;
     private ImageButton cameraButton, locationButton, fileAttachmentButton, multiSelectGalleryButton;
-    WeakReference<KmRecordButton> recordButtonWeakReference;
+    //WeakReference<KmRecordButton> recordButtonWeakReference;
+    WeakReference<ImageButton> recordButtonWeakReference;
     RecyclerView recyclerView;
     RecyclerViewPositionHelper recyclerViewPositionHelper;
     protected LinearLayoutManager linearLayoutManager;
@@ -339,16 +358,27 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
     private RichMessageActionProcessor richMessageActionProcessor;
     private boolean isTextToSpeechEnabled = true;
     private boolean isSpeechToTextEnabled = true;
-    private boolean isSendOnSpeechEnd = true;
+    private boolean isSendOnSpeechEnd = false;
     private KmTextToSpeech textToSpeech;
-    private KmSpeechToText speechToText;
+    //private KmSpeechToText speechToText;
+
 
     public void setEmojiIconHandler(EmojiconHandler emojiIconHandler) {
         this.emojiIconHandler = emojiIconHandler;
     }
-
+    //Google
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 10;
+    private SpeechService mSpeechService;
+    private VoiceRecorder mVoiceRecorder;
+    private boolean mIsRecording = true;
+    private MediaPlayer mediaPlayer;
+    private Handler mHandler;
+    private AsyncTask asyncTask;
+    private boolean playPause;
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         String jsonString = FileUtils.loadSettingsJsonFile(ApplozicService.getContext(getContext()));
         geoApiKey = Utils.getMetaDataValue(ApplozicService.getContext(getContext()), ConversationActivity.GOOGLE_API_KEY_META_DATA);
@@ -396,6 +426,14 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
         messageImageLoader.setImageFadeIn(false);
         messageImageLoader.addImageCache((getActivity()).getSupportFragmentManager(), 0.1f);
         applozicAudioRecordManager = new ApplozicAudioRecordManager(getActivity());
+
+        //media
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        ((ConversationActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -492,17 +530,25 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
             recordLayout.setVisibility(VISIBLE);
         }
 
-        recordView = list.findViewById(R.id.km_record_view);
-        recordView.setOnBasketAnimationEndListener(this);
-        recordView.setOnRecordListener(this);
+        //recordView = list.findViewById(R.id.km_record_view);
+        //recordView.setOnBasketAnimationEndListener(this);
+        //recordView.setOnRecordListener(this);
+        //mp = MediaPlayer.create(getContext(), R.raw.speech_to_text_listening);
+        //media
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         recordButton = list.findViewById(R.id.audio_record_button);
-        recordButton.setRecordView(recordView);
-        recordButton.setListenForRecord(true);
+        recordButton.setOnRecordListener(this);
+
+        mHandler = new Handler(Looper.getMainLooper());
+        //recordButton.setRecordView(recordView);
+        //recordButton.setListenForRecord(true);
 
         if (isSpeechToTextEnabled) {
-            recordView.enableSpeechToText(true);
-            recordView.setLessThanSecondAllowed(true);
-            speechToText = new KmSpeechToText(getActivity(), recordButton, this);
+                mIsRecording = true;
+            //recordView.enableSpeechToText(true);
+            //recordView.setLessThanSecondAllowed(true);
+            //speechToText = new KmSpeechToText(getActivity(), recordButton, this);
         }
 
         mainEditTextLinearLayout = (LinearLayout) list.findViewById(R.id.main_edit_text_linear_layout);
@@ -515,7 +561,8 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
         emailReplyReminderLayout = list.findViewById(R.id.emailReplyReminderView);
         processAttachmentIconsClick();
         Configuration config = getResources().getConfiguration();
-        recordButtonWeakReference = new WeakReference<>(recordButton);
+        //recordButtonWeakReference = new WeakReference<>(recordButton);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             if (config.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL) {
                 sendButton.setScaleX(-1);
@@ -585,6 +632,8 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
         boolean isRecordOptionEnabled = alCustomizationSettings != null && alCustomizationSettings.getAttachmentOptions() != null
                 && alCustomizationSettings.getAttachmentOptions().get(AUDIO_RECORD_OPTION) != null
                 && alCustomizationSettings.getAttachmentOptions().get(AUDIO_RECORD_OPTION);
+
+
 
         recordButton.setVisibility(isRecordOptionEnabled ? View.VISIBLE : View.GONE);
         sendButton.setVisibility(isRecordOptionEnabled ? View.GONE : View.VISIBLE);
@@ -745,7 +794,6 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
                                           }
                                       }
         );
-
 
         closeAttachmentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -952,21 +1000,56 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
 
     @Override
     public void onStart() {
-        super.onStart();
 
+
+        super.onStart();
+        getActivity().bindService(new Intent(getActivity(), SpeechService.class), mServiceConnection, getContext().BIND_AUTO_CREATE);
+        // Start listening to voices
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this.getActivity(),
+                Manifest.permission.RECORD_AUDIO)) {
+            showPermissionMessageDialog();
+        } else {
+            ActivityCompat.requestPermissions(this.getActivity(), new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_RECORD_AUDIO_PERMISSION);
+        }
         if (textToSpeech != null) {
             textToSpeech.initialize();
         }
-    }
+        //media
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);    }
+
 
     @Override
     public void onStop() {
+        // Stop listening to voice
+        //stopVoiceRecorder();
+
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        mIsRecording = false;
+        if (mVoiceRecorder != null) {
+            mVoiceRecorder.stop();
+            mVoiceRecorder = null;
+        }
+        // Stop Cloud Speech API
+        if (mSpeechService != null) {
+            mSpeechService.removeListener(mCloudSpeechServiceListener);
+            getActivity().unbindService(mServiceConnection);
+            mSpeechService = null;
+        }
         super.onStop();
 
         if (textToSpeech != null) {
             textToSpeech.destroy();
         }
+        ((ConversationActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
+
     }
+
 
     @Override
     public void onMessageSent(Message message) {
@@ -2796,6 +2879,10 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
     @Override
     public void onPause() {
         super.onPause();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
         populateAutoSuggestion(false, null, null);
 
         AlEventManager.getInstance().unregisterUIListener(TAG);
@@ -2803,7 +2890,7 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
         if (isRecording) {
             onLessThanSecond();
             if (recordButton != null) {
-                recordButton.stopScale();
+                //recordButton.stopScale();
             }
             if (recordView != null) {
                 recordView.hideViews(true);
@@ -2880,8 +2967,12 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
     @Override
     public void onResume() {
         super.onResume();
+        getActivity().bindService(new Intent(getActivity(), SpeechService.class), mServiceConnection, getContext().BIND_AUTO_CREATE);
 
         AlEventManager.getInstance().registerUIListener(TAG, this);
+
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
         if (MobiComUserPreference.getInstance(getActivity()).isChannelDeleted()) {
             MobiComUserPreference.getInstance(getActivity()).setDeleteChannel(false);
@@ -2966,6 +3057,11 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
         if (isEmailConversation(channel)) {
             emailReplyReminderLayout.setVisibility(VISIBLE);
         }
+        //media
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        ((ConversationActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
     }
 
     public void showTakeOverFromBotLayout(boolean show, final Contact assigneeBot) {
@@ -3673,7 +3769,8 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
 
             if (initial) {
                 if (recordButtonWeakReference != null) {
-                    KmRecordButton recordButton = recordButtonWeakReference.get();
+                    //KmRecordButton recordButton = recordButtonWeakReference.get();
+                    ImageButton recordButton = recordButtonWeakReference.get();
                     if (recordButton != null) {
                         recordButton.setEnabled(false);
                     }
@@ -3893,7 +3990,9 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
             }
             if (initial) {
                 if (recordButtonWeakReference != null) {
-                    KmRecordButton recordButton = recordButtonWeakReference.get();
+                    //KmRecordButton recordButton = recordButtonWeakReference.get();
+                    ImageButton recordButton = recordButtonWeakReference.get();
+
                     if (recordButton != null) {
                         recordButton.setEnabled(true);
                     }
@@ -4364,31 +4463,31 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
         return timer;
     }
 
-    @Override
-    public void onRecordStart() {
-        vibrate();
-        if (speechToText != null) {
-            if (isRecording) {
-                speechToText.stopListening();
-                if (recordButton != null) {
-                    recordButton.stopScale();
-                }
-                toggleRecordViews(true);
-
-                if (messageEditText != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim())) {
-                    handleSendAndRecordButtonView(true);
-                }
-            } else {
-                toggleRecordViews(false);
-                speechToText.startListening();
-            }
-        } else {
-            if (applozicAudioRecordManager != null) {
-                applozicAudioRecordManager.recordAudio();
-            }
-        }
-        toggleRecordViews(false);
-    }
+//    @Override
+//    public void onRecordStart() {
+//        vibrate();
+//        if (speechToText != null) {
+//            if (isRecording) {
+//                speechToText.stopListening();
+//                if (recordButton != null) {
+//                    //recordButton.stopScale();
+//                }
+//                toggleRecordViews(true);
+//
+//                if (messageEditText != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim())) {
+//                    handleSendAndRecordButtonView(true);
+//                }
+//            } else {
+//                toggleRecordViews(false);
+//                speechToText.startListening();
+//            }
+//        } else {
+//            if (applozicAudioRecordManager != null) {
+//                applozicAudioRecordManager.recordAudio();
+//            }
+//        }
+//        toggleRecordViews(false);
+//    }
 
     @Override
     public void onRecordCancel() {
@@ -4435,7 +4534,7 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
     public void onSpeechToTextPartialResult(String text) {
         if (messageEditText != null && !TextUtils.isEmpty(text)) {
             messageEditText.setText(text);
-            handleSendAndRecordButtonView(speechToText.isStopped());
+            //handleSendAndRecordButtonView(speechToText.isStopped());
         }
     }
 
@@ -4602,5 +4701,227 @@ public abstract class MobiComConversationFragment extends Fragment implements Vi
     @Override
     public void onLoaderReset(Loader loader) {
         kmAutoSuggestionAdapter.swapCursor(null);
+    }
+
+    //Google
+    private final SpeechService.Listener mCloudSpeechServiceListener = new SpeechService.Listener() {
+        @Override
+        public void onSpeechRecognized(final String text, final boolean isFinal) {
+
+
+            if (isFinal) {
+                mVoiceRecorder.dismiss();
+
+            }
+
+           getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (isFinal) {
+                        Log.d(TAG, "Final Response : " + text);
+                        //if (mSavedText.equalsIgnoreCase(text)) {
+                            messageEditText.setTextColor(Color.BLACK);
+                            messageEditText.setText(text);
+                            stopVoiceRecorder();
+                        Log.d(TAG, "Final Response : " + mIsRecording);
+                        recordButton.changePlayButtonState(VoiceView.STATE_NORMAL);
+                        messageEditText.setEnabled(true);
+
+                        // }
+                    } else {
+                        Log.d(TAG, "Non Final Response : " + text);
+                        messageEditText.setTextColor(Color.RED);
+                        messageEditText.setText(text);
+                        //messageEditText.setEnabled(false);
+                    }
+                }
+            });
+        }
+    };
+
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder binder) {
+            mSpeechService = SpeechService.from(binder);
+            mSpeechService.addListener(mCloudSpeechServiceListener);
+            //mStatus.setVisibility(View.VISIBLE);
+            Log.i(TAG,"onServiceConnected");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mSpeechService = null;
+        }
+
+    };
+
+    private final VoiceRecorder.Callback mVoiceCallback = new VoiceRecorder.Callback() {
+
+        @Override
+        public void onVoiceStart() {
+            //showStatus(true);
+
+            if (mSpeechService != null) {
+                mSpeechService.startRecognizing(mVoiceRecorder.getSampleRate());
+            }
+        }
+
+        @Override
+        public void onVoice(final byte[] buffer, int size) {
+            if (mSpeechService != null) {
+                mSpeechService.recognize(buffer, size);
+            }
+
+//            mHandler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    int amplitude = (buffer[0] & 0xff) << 8 | buffer[1];
+//                    double amplitudeDb3 = 20 * Math.log10((double)Math.abs(amplitude) / 32768);
+//                    float radius2 = (float) Math.log10(Math.max(1, amplitudeDb3)) * dp2px(getActivity(), 20);
+//                    Log.d("SUJIT","radius2 : " + radius2);
+//                    recordButton.animateRadius(radius2 * 10);
+//                }
+//            });
+        }
+
+        @Override
+        public void onVoiceEnd() {
+            //showStatus(false);
+            if (mSpeechService != null) {
+                mSpeechService.finishRecognizing();
+            }
+
+        }
+
+    };
+
+    @Override
+    public void onRecordStart() {
+
+
+        startStopRecording();
+
+    }
+
+    @Override
+    public void onRecordFinish() {
+
+        startStopRecording();
+
+    }
+
+    private void startStopRecording() {
+
+
+        if (mIsRecording) {
+            recordButton.changePlayButtonState(VoiceView.STATE_NORMAL);
+            stopVoiceRecorder();
+
+            Log.d(TAG, "# startStopRecording # : " + mIsRecording);
+
+        } else {
+
+            Log.d(TAG, "# startStopRecording # : " + mIsRecording);
+            recordButton.changePlayButtonState(VoiceView.STATE_RECORDING);
+            startVoiceRecorder();
+        }
+    }
+
+    private void startVoiceRecorder() {
+        Log.d(TAG, "# startVoiceRecorder #");
+        mediaPlayer = MediaPlayer.create(getActivity(),R.raw.speech_to_text_listening);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mediaPlayer.start();
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        mediaPlayer.reset();
+                        mediaPlayer.release();
+
+                    }
+                });
+            }
+        });
+
+
+
+        mIsRecording = true;
+        if (mVoiceRecorder != null) {
+            mVoiceRecorder.stop();
+        }
+        mVoiceRecorder = new VoiceRecorder(mVoiceCallback);
+        mVoiceRecorder.start();
+
+    }
+
+    private void stopVoiceRecorder() {
+
+        mediaPlayer = MediaPlayer.create(getActivity(),R.raw.speech_to_text_stop);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mediaPlayer.start();
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        mediaPlayer.reset();
+                        mediaPlayer.release();
+                    }
+                });
+            }
+        });
+        Log.d(TAG, "# stopVoiceRecorder #");
+        mIsRecording = false;
+
+        if (mVoiceRecorder != null) {
+            mVoiceRecorder.stop();
+            mVoiceRecorder = null;
+        }
+
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            if (permissions.length == 1 && grantResults.length == 1
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startVoiceRecorder();
+            } else {
+                showPermissionMessageDialog();
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    private void showPermissionMessageDialog() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this.getContext());
+        alertDialogBuilder.setMessage("This app needs to record audio and recognize your speech")
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                }).setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+            }
+        }).create();
+
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
+
+    public static int dp2px(Context context, int dp) {
+        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context
+                .getResources().getDisplayMetrics());
+        return px;
     }
 }

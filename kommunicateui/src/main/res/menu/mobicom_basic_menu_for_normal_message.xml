@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:mobicomkit="http://schemas.android.com/apk/res-auto">
+    xmlns:mobicomkit="http://schemas.android.com/apk/res-auto"
+    xmlns:myapp="http://schemas.android.com/tools">
 
     <item
         android:id="@+id/menu_search"
@@ -129,9 +130,9 @@
         android:id="@+id/logout"
         android:icon="@drawable/applozic_ic_action_time"
         android:orderInCategory="11"
-        android:showAsAction="collapseActionView"
+        myapp:showAsAction="always|withText"
         android:title="@string/logout"
-        android:visible="false" />
+        android:visible="true" />
 
     <item
         android:id="@+id/share_conversation"
